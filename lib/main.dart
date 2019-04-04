@@ -3,9 +3,12 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:Proxcontrol/Screens/home_screen.dart';
 import 'package:Proxcontrol/Screens/welcome_screen.dart';
+import 'package:Proxcontrol/getting_started_screen.dart';
+
 
 void main() async {
-  Widget _defaultHome = new WelcomeScreen();
+
+  Widget _defaultHome = new GettingStartedSceen();
   bool _seen = false;
 
   SharedPreferences preferences = await SharedPreferences.getInstance();
@@ -15,13 +18,5 @@ void main() async {
     _defaultHome = new HomeScreen();
   }
 
-  runApp(new MaterialApp(
-    title: 'Proxcontrol',
-    home: _defaultHome,
-    debugShowCheckedModeBanner: false,
-    theme: new ThemeData(
-      primaryColor: Colors.indigo,
-      fontFamily: 'Nunito'
-    ),
-  ));
+  runApp(_defaultHome);
 }

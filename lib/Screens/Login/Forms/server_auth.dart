@@ -1,5 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:Proxcontrol/main.dart';
 import 'package:Proxcontrol/Screens/home_screen.dart';
+import 'package:Proxcontrol/Client/client.dart';
+import 'package:Proxcontrol/Client/Objects/auth_realms.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class ServerAuthForm extends StatefulWidget {
   @override
@@ -8,8 +12,10 @@ class ServerAuthForm extends StatefulWidget {
 
 class _ServerDetailsAuthState extends State<ServerAuthForm> {
   final _formKey = GlobalKey<FormState>();
+  var _authRealms = new List<AuthRealm>();
   List<String> _realms = ['PAM Authentication', 'Proxmox VE Authentication'];
   String _selectedRealm;
+
 
   @override
   Widget build(BuildContext context) {
