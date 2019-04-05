@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:Proxcontrol/server_auth_login_screen.dart';
+import 'package:Proxcontrol/Client/client.dart';
+import 'package:modal_progress_hud/modal_progress_hud.dart';
 
 class ServerDetailsLoginScreen extends StatefulWidget {
   @override
@@ -9,6 +11,14 @@ class ServerDetailsLoginScreen extends StatefulWidget {
 class _ServerDetailsLoginScreenState extends State<ServerDetailsLoginScreen> {
   String serverAddress;
   String serverPort;
+  bool _connecting = false;
+
+  final _formKey = GlobalKey<FormState>();
+
+  @override
+  void dispose() {
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -16,19 +26,38 @@ class _ServerDetailsLoginScreenState extends State<ServerDetailsLoginScreen> {
     double screenWidth = MediaQuery.of(context).size.width;
     double screenHeight = MediaQuery.of(context).size.height;
 
+
+    void _showDialog(String title, String message) {
+      // flutter defined function
+      showDialog(
+        context: context,
+        builder: (BuildContext context) {
+          // return object of type Dialog
+          return AlertDialog(
+            title: new Text(title),
+            content: new Text(message),
+            actions: <Widget>[
+              // usually buttons at the bottom of the dialog
+              new FlatButton(
+                child: new Text("Close"),
+                onPressed: () {
+                  Navigator.of(context).pop();
+                },
+              ),
+            ],
+          );
+        },
+      );
+    }
+
     final image = Container(
-      padding: EdgeInsets.only(
-        top: screenHeight / 15,
-        left: screenWidth / 10,
-        right: screenWidth / 10,
-        bottom: screenHeight / 25),
       child: Hero(
         tag: 'logo',
         child: CircleAvatar(
           backgroundColor: Colors.transparent,
           radius: screenWidth / 4,
-          child: Image.asset('assets/logo.png'),
-        ),),
+          child: Image.asset('assets/logo.png')),
+      ),
     );
 
     final serverAddressField = Container(
@@ -48,10 +77,19 @@ class _ServerDetailsLoginScreenState extends State<ServerDetailsLoginScreen> {
             )
           ]
       ),
-      child: TextField(
-        onSubmitted: (value) {
-          value.replaceAll(new RegExp(r"http://"), '');
-          value.replaceAll(new RegExp(r"https://"), '');
+      child: TextFormField(
+        validator: (value) {
+          if (value.isEmpty) {
+            return 'You must specify a FQDN or IP.';
+          } else if (value.contains('http://')) {
+            return 'This should not contan http://';
+          } else if (value.contains('https://')) {
+            return 'This should not contain https://';
+          }
+        },
+        onSaved: (value) {
+          value = value.replaceAll(new RegExp(r"http://"), '');
+          value = value.replaceAll(new RegExp(r"https://"), '');
           serverAddress = value;
         },
         decoration: InputDecoration(
@@ -81,8 +119,13 @@ class _ServerDetailsLoginScreenState extends State<ServerDetailsLoginScreen> {
             )
           ]
       ),
-      child: TextField(
-        onSubmitted: (value) {
+      child: TextFormField(
+        validator: (value) {
+          if (value.isEmpty) {
+            return 'You must specify a port.';
+          }
+        },
+        onSaved: (value) {
           serverPort = value;
         },
         decoration: InputDecoration(
@@ -99,52 +142,142 @@ class _ServerDetailsLoginScreenState extends State<ServerDetailsLoginScreen> {
       shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(24)),
       onPressed: () {
-        Navigator.push(
-            context,
-            MaterialPageRoute(builder: (context) => ServerAuthLoginScreen()));
+        if(_formKey.currentState.validate()) {
+          _formKey.currentState.save();
+
+          setState(() {
+            _connecting = true;
+          });
+
+          API.getAuthRealms(serverAddress, serverPort).then((realms) async {
+            if (realms == null) {
+              await Future.delayed(new Duration(seconds: 10), () {
+                setState(() {
+                  _connecting = false;
+                });
+              });
+              _showDialog("Connection Error", "Unable to open a connection to $serverAddress:$serverPort, please try another URL or port.");
+            } else {
+              await Future.delayed(new Duration(seconds: 2), () {
+                setState(() {
+                  _connecting = false;
+                });
+              });
+              Navigator.pushReplacement(
+                  context,
+                  MaterialPageRoute(builder: (context) =>
+                      ServerAuthLoginScreen(authRealms: realms)));
+            }
+          });
+        }
       },
+
       padding: EdgeInsets.all(10),
       color: Colors.indigoAccent,
       child: Text('NEXT', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
     );
 
+    _buildVerticalLayout() {
+      return Form(
+        key: _formKey,
+        child: ListView(
+          shrinkWrap: true,
+          children: <Widget>[
+            Padding(
+              padding: EdgeInsets.only(
+                  top: screenHeight / 15,
+                  left: screenWidth / 10,
+                  right: screenWidth / 10,
+                  bottom: screenHeight / 25),
+              child: image,
+            ),
+
+            Padding(
+              padding: EdgeInsets.only(
+                  left: screenWidth / 12,
+                  right: screenWidth / 12,
+                  top: screenHeight / 30),
+              child: serverAddressField,
+            ),
+
+            Padding(
+              padding: EdgeInsets.only(
+                  left: screenWidth / 12,
+                  right: screenWidth / 12,
+                  top: screenHeight / 20,
+                  bottom: screenHeight / 20),
+              child: serverPortField,
+            ),
+
+            Padding(
+              padding: EdgeInsets.only(
+                  left: screenWidth / 12,
+                  right: screenWidth / 12,
+                  top: screenHeight / 20,
+                  bottom: screenHeight / 30),
+              child: nextButton,
+            ),
+          ],
+        ),
+      );
+    }
+
+    _buildHorizontalLayout() {
+      return GridView.count(
+        //shrinkWrap: true,
+        crossAxisCount: 2,
+        children: <Widget>[
+          Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: <Widget>[
+              Padding(
+                padding: EdgeInsets.only(
+                    left: screenWidth / 10,
+                    right: screenWidth / 10),
+                child: image,
+              ),
+            ],
+          ),
+
+          ListView(
+            shrinkWrap: true,
+            children: <Widget>[
+              Padding(
+                padding: EdgeInsets.only(
+                    right: screenWidth / 18,
+                    top: screenHeight / 5),
+                child: serverAddressField,
+              ),
+
+              Padding(
+                padding: EdgeInsets.only(
+                    right: screenWidth / 18,
+                    top: screenHeight / 30,
+                    bottom: screenHeight / 20),
+                child: serverPortField,
+              ),
+
+              Padding(
+                padding: EdgeInsets.only(
+                    right: screenWidth / 18,
+                    top: screenHeight / 20,
+                    bottom: screenHeight / 30),
+                child: nextButton,
+              ),
+            ],
+          )
+        ],
+      );
+    }
+
     return Scaffold(
       appBar: AppBar(
-        title: Text('Server Connection Details'),
-        centerTitle: true),
-      body: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        mainAxisAlignment: MainAxisAlignment.start,
-        children: <Widget>[
-          image,
-
-          Padding(
-            padding: EdgeInsets.only(
-                left: screenWidth / 12,
-                right: screenWidth / 12,
-                top: screenHeight / 30),
-            child: serverAddressField,
-          ),
-
-          Padding(
-            padding: EdgeInsets.only(
-                left: screenWidth / 12,
-                right: screenWidth / 12,
-                top: screenHeight / 30,
-                bottom: screenHeight / 20),
-            child: serverPortField,
-          ),
-
-          Padding(
-            padding: EdgeInsets.only(
-                left: screenWidth / 12,
-                right: screenWidth / 12,
-                top: screenHeight / 20,
-                bottom: screenHeight / 30),
-            child: nextButton,
-          ),
-        ],
-      ),
+          title: Text('Server Connection Details'),
+          centerTitle: true),
+      body: ModalProgressHUD(
+          inAsyncCall: _connecting,
+          child: _buildVerticalLayout())
     );
   }
 }

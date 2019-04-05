@@ -1,32 +1,15 @@
 class AuthRealm {
-  String type;
-  String realm;
-  String comment;
+  final String type;
+  final String realm;
+  final String comment;
 
-  AuthRealm(String type, String realm, String comment) {
-    this.type = type;
-    this.realm = realm;
-    this.comment = comment;
-  }
+  AuthRealm({this.type, this.realm, this.comment});
 
-  AuthRealm.fromJson(Map json)
-      : type = json['type'],
-        realm = json['realm'],
-        comment = json['comment'];
-
-  Map toJson() {
-    return {'type' : type, 'realm' : realm, 'comment' : comment};
-  }
-
-  String getType() {
-    return type;
-  }
-
-  String getRealm() {
-    return realm;
-  }
-
-  String getComment() {
-    return comment;
+  factory AuthRealm.fromJson(Map<String, dynamic> json) {
+    return AuthRealm(
+      type: json['type'],
+      realm: json['realm'],
+      comment: json['comment']
+    );
   }
 }

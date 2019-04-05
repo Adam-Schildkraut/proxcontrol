@@ -67,7 +67,7 @@ class GettingStartedSceen extends StatelessWidget {
       home: Builder(
           builder: (context) => IntroViewsFlutter(
               pages,
-              fullTransition: 100,
+              fullTransition: 300,
               background: Colors.transparent,
               showSkipButton: false,
               onTapDoneButton: () {
