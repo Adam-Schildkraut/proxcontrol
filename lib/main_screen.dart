@@ -57,8 +57,9 @@ class _MainScreenState extends State<MainScreen> {
                 color: Colors.indigoAccent,
                 child: Text("RESET PREFERENCES THEN EXIT", textAlign: TextAlign.center, style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
                 onPressed: () {
-                  _preferences.clear();
-                  exit(0);
+                  _preferences.clear().then((result) {
+                    exit(0);
+                  });
                 },
               ),
             )
