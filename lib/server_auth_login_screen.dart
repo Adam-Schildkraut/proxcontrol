@@ -1,30 +1,61 @@
 import 'dart:async';
+import 'package:Proxcontrol/Client/client.dart';
 import 'package:flutter/material.dart';
 import 'package:Proxcontrol/Client/Objects/auth_realms.dart';
 import 'package:modal_progress_hud/modal_progress_hud.dart';
+import 'package:Proxcontrol/main_screen.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class ServerAuthLoginScreen extends StatefulWidget {
   final List<AuthRealm> authRealms;
-  const ServerAuthLoginScreen({Key key, @required this.authRealms}) : super(key: key);
+  final String url;
+  final String port;
+  const ServerAuthLoginScreen({Key key, @required this.authRealms, @required this.url, @required this.port}) : super(key: key);
 
   @override
-  _ServerAuthLoginScreenState createState() => _ServerAuthLoginScreenState(authRealms);
+  _ServerAuthLoginScreenState createState() => _ServerAuthLoginScreenState(authRealms, url, port);
 }
 
 class _ServerAuthLoginScreenState extends State<ServerAuthLoginScreen> {
   List<AuthRealm> authRealms;
-  _ServerAuthLoginScreenState(this.authRealms);
+  String url;
+  String port;
+  _ServerAuthLoginScreenState(this.authRealms, this.url, this.port);
+  final _formKey = GlobalKey<FormState>();
 
   String serverRealm;
   String serverUsername;
   String serverPassword;
-  bool _connecting = false;
+  bool _processing = false;
 
   @override
   Widget build(BuildContext context) {
-    double screenWidth = MediaQuery.of(context).size.width;
-    double screenHeight = MediaQuery.of(context).size.height;
+    final double screenWidth = MediaQuery.of(context).size.width;
+    final double screenHeight = MediaQuery.of(context).size.height;
 
+    void _showDialog(String title, String message) {
+      // flutter defined function
+      showDialog(
+        context: context,
+        builder: (BuildContext context) {
+          // return object of type Dialog
+          return AlertDialog(
+            title: new Text(title),
+            content: new Text(message),
+            actions: <Widget>[
+              // usually buttons at the bottom of the dialog
+              new FlatButton(
+                child: new Text("Close"),
+                onPressed: () {
+                  Navigator.of(context).pop();
+                },
+              ),
+            ],
+          );
+        },
+      );
+    }
+    
     final image = Container(
       child: Hero(
         tag: 'logo',
@@ -36,6 +67,11 @@ class _ServerAuthLoginScreenState extends State<ServerAuthLoginScreen> {
     );
 
     final realmSelector = FormField(
+      validator: (value) {
+        if (value.isEmpty) {
+          return 'Please select an Authentication Realm';
+        }
+      },
       builder: (FormFieldState state) {
         return InputDecorator(
           decoration: InputDecoration(
@@ -81,9 +117,14 @@ class _ServerAuthLoginScreenState extends State<ServerAuthLoginScreen> {
             )
           ]
       ),
-      child: TextField(
-        onSubmitted: (value) {
+      child: TextFormField(
+        onSaved: (value) {
           serverUsername = value;
+        },
+        validator: (value) {
+          if (value.isEmpty) {
+            return 'You must enter a username.';
+          }
         },
         decoration: InputDecoration(
           border: InputBorder.none,
@@ -112,10 +153,15 @@ class _ServerAuthLoginScreenState extends State<ServerAuthLoginScreen> {
             )
           ]
       ),
-      child: TextField(
+      child: TextFormField(
         obscureText: true,
-        onSubmitted: (value) {
+        onSaved: (value) {
           serverPassword = value;
+        },
+        validator: (value) {
+          if (value.isEmpty) {
+            return 'You must enter a password.';
+          }
         },
         decoration: InputDecoration(
           border: InputBorder.none,
@@ -131,11 +177,45 @@ class _ServerAuthLoginScreenState extends State<ServerAuthLoginScreen> {
       shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(24)),
       onPressed: () {
-        /*
-        Navigator.push(
-            context,
-            MaterialPageRoute(builder: (context) => ServerAuthLoginScreen()));
-            */
+        if (_formKey.currentState.validate()) {
+          _formKey.currentState.save();
+
+          setState(() {
+            _processing = true;
+          });
+
+          Client client = new Client(url, port);
+          client.login(serverUsername, serverPassword, serverRealm).then((response) async {
+            if (response.contains("AUTH_FAIL")) {
+              await Future.delayed(new Duration(seconds: 1), () {
+                setState(() {
+                  _processing = false;
+                });
+              });
+              _showDialog("Authenticaion Error", "The username and password you provided were invalid. Please try again.");
+              _formKey.currentState.reset();
+            } else if (response.contains("UNKNOWN_ERROR")) {
+              await Future.delayed(new Duration(seconds: 5), () {
+                setState(() {
+                  _processing = false;
+                });
+              });
+              _showDialog("Unknown Error", "An unknown error has occured. Please try again later. If this problem persists please contact your System Administrator");
+              _formKey.currentState.reset();
+            } else if (response.contains("AUTH_SUCCESS")) {
+              await Future.delayed(new Duration(seconds: 1), () {
+                setState(() {
+                  _processing = false;
+                });
+              });
+              SharedPreferences preferences = await SharedPreferences.getInstance();
+              preferences.setBool('seen', true);
+              Navigator.pushReplacement(
+                  context,
+                  MaterialPageRoute(builder: (context) => MainScreen(client: client)));
+            }
+          });
+        }
       },
       padding: EdgeInsets.all(10),
       color: Colors.indigoAccent,
@@ -143,51 +223,54 @@ class _ServerAuthLoginScreenState extends State<ServerAuthLoginScreen> {
     );
 
     _buildVerticalLayout() {
-      return ListView(
-        shrinkWrap: true,
-        children: <Widget>[
-          Padding(
-            padding: EdgeInsets.only(
-                top: screenHeight / 40,
-                left: screenWidth / 10,
-                right: screenWidth / 10,
-                bottom: screenHeight / 25),
-            child: image,
-          ),
+      return Form(
+        key: _formKey,
+        child: ListView(
+          shrinkWrap: true,
+          children: <Widget>[
+            Padding(
+              padding: EdgeInsets.only(
+                  top: screenHeight / 40,
+                  left: screenWidth / 10,
+                  right: screenWidth / 10,
+                  bottom: screenHeight / 25),
+              child: image,
+            ),
 
-          Padding(
-            padding: EdgeInsets.only(
-                left: screenWidth / 12,
-                right: screenWidth / 12),
-            child: realmSelector,
-          ),
+            Padding(
+              padding: EdgeInsets.only(
+                  left: screenWidth / 12,
+                  right: screenWidth / 12),
+              child: realmSelector,
+            ),
 
-          Padding(
-            padding: EdgeInsets.only(
-                left: screenWidth / 12,
-                right: screenWidth / 12,
-                top: screenHeight / 30),
-            child: serverUsernameField,
-          ),
+            Padding(
+              padding: EdgeInsets.only(
+                  left: screenWidth / 12,
+                  right: screenWidth / 12,
+                  top: screenHeight / 30),
+              child: serverUsernameField,
+            ),
 
-          Padding(
-            padding: EdgeInsets.only(
-                left: screenWidth / 12,
-                right: screenWidth / 12,
-                top: screenHeight / 30,
-                bottom: screenHeight / 20),
-            child: serverPasswordField,
-          ),
+            Padding(
+              padding: EdgeInsets.only(
+                  left: screenWidth / 12,
+                  right: screenWidth / 12,
+                  top: screenHeight / 30,
+                  bottom: screenHeight / 20),
+              child: serverPasswordField,
+            ),
 
-          Padding(
-            padding: EdgeInsets.only(
-                left: screenWidth / 12,
-                right: screenWidth / 12,
-                top: screenHeight / 20,
-                bottom: screenHeight / 30),
-            child: nextButton,
-          ),
-        ],
+            Padding(
+              padding: EdgeInsets.only(
+                  left: screenWidth / 12,
+                  right: screenWidth / 12,
+                  top: screenHeight / 20,
+                  bottom: screenHeight / 30),
+              child: nextButton,
+            ),
+          ],
+        ),
       );
     }
 
@@ -239,30 +322,15 @@ class _ServerAuthLoginScreenState extends State<ServerAuthLoginScreen> {
         ],
       );
     }
-
-    /*
+    
     return Scaffold(
         appBar: AppBar(
             title: Text('Server Connection Details'),
             centerTitle: true),
         body: ModalProgressHUD(
             inAsyncCall: _processing,
-            child: OrientationBuilder(
-                builder: (context, orientation) {
-                  return orientation == Orientation.portrait
-                      ? _buildVerticalLayout()
-                      : _buildHorizontalLayout();
-                }
-            )
+            child: _buildVerticalLayout()
         )
-    );
-    */
-
-    return Scaffold(
-        appBar: AppBar(
-            title: Text('Server Connection Details'),
-            centerTitle: true),
-        body: _buildVerticalLayout()
     );
   }
 }

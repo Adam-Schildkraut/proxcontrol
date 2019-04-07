@@ -22,9 +22,8 @@ class _ServerDetailsLoginScreenState extends State<ServerDetailsLoginScreen> {
 
   @override
   Widget build(BuildContext context) {
-
-    double screenWidth = MediaQuery.of(context).size.width;
-    double screenHeight = MediaQuery.of(context).size.height;
+    final double screenWidth = MediaQuery.of(context).size.width;
+    final double screenHeight = MediaQuery.of(context).size.height;
 
 
     void _showDialog(String title, String message) {
@@ -150,14 +149,7 @@ class _ServerDetailsLoginScreenState extends State<ServerDetailsLoginScreen> {
           });
 
           API.getAuthRealms(serverAddress, serverPort).then((realms) async {
-            if (realms == null) {
-              await Future.delayed(new Duration(seconds: 10), () {
-                setState(() {
-                  _connecting = false;
-                });
-              });
-              _showDialog("Connection Error", "Unable to open a connection to $serverAddress:$serverPort, please try another URL or port.");
-            } else {
+            if (realms != null) {
               await Future.delayed(new Duration(seconds: 2), () {
                 setState(() {
                   _connecting = false;
@@ -166,15 +158,24 @@ class _ServerDetailsLoginScreenState extends State<ServerDetailsLoginScreen> {
               Navigator.pushReplacement(
                   context,
                   MaterialPageRoute(builder: (context) =>
-                      ServerAuthLoginScreen(authRealms: realms)));
+                      ServerAuthLoginScreen(authRealms: realms,
+                          url: serverAddress,
+                          port: serverPort)));
             }
+          }).catchError((e) {
+            print(e.toString());
+            setState(() {
+              _connecting = false;
+            });
+            _showDialog("Connection Error", "An error has occurred while connecting to your server. Please verify your connection details and try again.");
+            _formKey.currentState.reset();
           });
         }
       },
 
       padding: EdgeInsets.all(10),
       color: Colors.indigoAccent,
-      child: Text('NEXT', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+      child: Text('NEXT', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold))
     );
 
     _buildVerticalLayout() {

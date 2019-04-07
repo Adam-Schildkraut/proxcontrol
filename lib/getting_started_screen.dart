@@ -58,6 +58,28 @@ class GettingStartedSceen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    return Builder(
+        builder: (context) => IntroViewsFlutter(
+            pages,
+            fullTransition: 300,
+            background: Colors.transparent,
+            showSkipButton: false,
+            onTapDoneButton: () {
+              Navigator.pushReplacement(
+                  context,
+                  MaterialPageRoute(builder: (context) => ServerDetailsLoginScreen()));
+            },
+            pageButtonTextStyles: TextStyle(
+                color: Colors.white,
+                fontSize: 18.0)
+        )
+    );
+  }
+
+
+  /*
+  @override
+  Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       title: 'Proxcontrol',
@@ -82,4 +104,6 @@ class GettingStartedSceen extends StatelessWidget {
       ),
     );
   }
+  */
+
 }
