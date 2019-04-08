@@ -17,6 +17,14 @@ class _MainScreenState extends State<MainScreen> {
   SharedPreferences _preferences = getSharedPreferences();
   _MainScreenState(this.client);
 
+  void _clearAppData() async {
+    final _sStorage = getSecureStorage();
+    await _sStorage.deleteAll();
+    _preferences.clear().then((result) {
+      exit(0);
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     final double screenWidth = MediaQuery.of(context).size.width;
@@ -57,9 +65,7 @@ class _MainScreenState extends State<MainScreen> {
                 color: Colors.indigoAccent,
                 child: Text("RESET PREFERENCES THEN EXIT", textAlign: TextAlign.center, style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
                 onPressed: () {
-                  _preferences.clear().then((result) {
-                    exit(0);
-                  });
+                  _clearAppData();
                 },
               ),
             )

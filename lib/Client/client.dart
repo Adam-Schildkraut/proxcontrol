@@ -6,6 +6,7 @@ import 'package:http/http.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:Proxcontrol/Client/Objects/auth_details.dart';
 import 'package:Proxcontrol/main.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 class Client {
   String baseUrl;
@@ -44,6 +45,7 @@ class Client {
 
 
   Future<String> login(String username, String password, String authRealm) async {
+    final _sStorage = getSecureStorage();
     Map<String, dynamic> body = {'username': username + "@" + authRealm, 'password': password};
 
     HttpClient client = new HttpClient();
@@ -62,6 +64,8 @@ class Client {
       var data = json.decode(response.body);
       print(data);
       AuthDetails details = new AuthDetails.fromJson(data);
+
+      await _sStorage.write(key: 'password', value: password);
 
       _preferences.setString('username', details.data.username);
       _username = details.data.username;
@@ -83,7 +87,9 @@ class Client {
   }
 
   Future<bool> getNewTicket() async {
-    Map<String, dynamic> body = {'username': _username, 'password': _ticket};
+    final _sStorage = getSecureStorage();
+    String pass = await _sStorage.read(key: 'password');
+    Map<String, dynamic> body = {'username': _username, 'password': pass};
 
     HttpClient client = new HttpClient();
     client.badCertificateCallback =((X509Certificate cert, String host, int port) => true);

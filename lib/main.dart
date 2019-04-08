@@ -6,13 +6,15 @@ import 'package:Proxcontrol/Client/client.dart';
 import 'package:Proxcontrol/logged_out_screen.dart';
 import 'package:connectivity/connectivity.dart';
 import 'package:Proxcontrol/internet_required_screen.dart';
-
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 SharedPreferences _preferences;
+FlutterSecureStorage _sStorage;
 
 void main() async {
 
   Widget _defaultHome = new GettingStartedSceen();
+  _sStorage = new FlutterSecureStorage();
 
   var connectivityResult = await (Connectivity().checkConnectivity());
   if (connectivityResult == ConnectivityResult.none) {
@@ -26,25 +28,19 @@ void main() async {
     if (_seen) {
       String url;
       String port;
-      String ticket;
       Client client;
 
       url = _preferences.getString('url');
       port = _preferences.getString('port');
-      ticket = _preferences.getString('ticket');
 
-      if (ticket != null) {
-        if (ticket.contains('')) {
-          client = new Client(url, port);
-          await client.getNewTicket().then((response) {
-            if (response) {
-              _defaultHome = MainScreen(client: client);
-            } else {
-              _defaultHome = LoggedOutScreen();
-            }
-          });
+      client = new Client(url, port);
+      await client.getNewTicket().then((response) {
+        if (response) {
+          _defaultHome = MainScreen(client: client);
+        } else {
+          _defaultHome = LoggedOutScreen();
         }
-      }
+      });
     }
   }
 
@@ -53,6 +49,10 @@ void main() async {
 
 SharedPreferences getSharedPreferences() {
   return _preferences;
+}
+
+FlutterSecureStorage getSecureStorage() {
+  return _sStorage;
 }
 
 class App extends StatelessWidget {
