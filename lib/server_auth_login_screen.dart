@@ -1,10 +1,12 @@
 import 'dart:async';
 import 'package:Proxcontrol/Client/client.dart';
 import 'package:flutter/material.dart';
-import 'package:Proxcontrol/Client/Objects/auth_realms.dart';
+import 'package:Proxcontrol/Client/Objects/auth_realm.dart';
 import 'package:modal_progress_hud/modal_progress_hud.dart';
 import 'package:Proxcontrol/main_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:Proxcontrol/Client/Objects/node.dart';
+import 'package:Proxcontrol/Client/Objects/vm.dart';
 
 class ServerAuthLoginScreen extends StatefulWidget {
   final List<AuthRealm> authRealms;
@@ -209,10 +211,22 @@ class _ServerAuthLoginScreenState extends State<ServerAuthLoginScreen> {
                 });
               });
               SharedPreferences preferences = await SharedPreferences.getInstance();
-              preferences.setBool('seen', true);
+              await preferences.setBool('seen', true);
+
+              List<Node> nodes = new List<Node>();
+              List<VM> vms = new List<VM>();
+
+              await client.getNodes().then((response) {
+                nodes = response;
+              });
+
+              await client.getAllVMs().then((response) {
+                vms = response;
+              });
+
               Navigator.pushReplacement(
                   context,
-                  MaterialPageRoute(builder: (context) => MainScreen(client: client)));
+                  MaterialPageRoute(builder: (context) => MainScreen(client: client, nodes: nodes, vms: vms)));
             }
           });
         }

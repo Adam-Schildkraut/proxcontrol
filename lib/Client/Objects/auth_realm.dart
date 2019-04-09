@@ -7,9 +7,9 @@ class AuthRealm {
 
   factory AuthRealm.fromJson(Map<String, dynamic> json) {
     return AuthRealm(
-      type: json['type'],
-      realm: json['realm'],
-      comment: json['comment']
+        type: json['type'],
+        realm: json['realm'],
+        comment: json['comment']
     );
   }
 }
