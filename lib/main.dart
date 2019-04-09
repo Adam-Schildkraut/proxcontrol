@@ -7,6 +7,8 @@ import 'package:Proxcontrol/logged_out_screen.dart';
 import 'package:connectivity/connectivity.dart';
 import 'package:Proxcontrol/internet_required_screen.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:Proxcontrol/Client/Objects/node.dart';
+import 'package:Proxcontrol/Client/Objects/vm.dart';
 
 SharedPreferences _preferences;
 FlutterSecureStorage _sStorage;
@@ -29,14 +31,24 @@ void main() async {
       String url;
       String port;
       Client client;
+      List<VM> vms = new List<VM>();
+      List<Node> nodes = new List<Node>();
 
       url = _preferences.getString('url');
       port = _preferences.getString('port');
 
       client = new Client(url, port);
-      await client.getNewTicket().then((response) {
+      await client.getNewTicket().then((response) async {
         if (response) {
-          _defaultHome = MainScreen(client: client);
+          await client.getNodes().then((response) {
+            nodes = response;
+          });
+
+          await client.getAllVMs().then((response) {
+            vms = response;
+          });
+
+          _defaultHome = MainScreen(client: client, nodes: nodes, vms: vms);
         } else {
           _defaultHome = LoggedOutScreen();
         }

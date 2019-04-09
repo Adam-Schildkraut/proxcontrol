@@ -1,12 +1,13 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
-import 'package:Proxcontrol/Client/Objects/auth_realms.dart';
+import 'package:Proxcontrol/Client/Objects/auth_realm.dart';
 import 'package:http/http.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:Proxcontrol/Client/Objects/auth_details.dart';
 import 'package:Proxcontrol/main.dart';
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:Proxcontrol/Client/Objects/node.dart';
+import 'package:Proxcontrol/Client/Objects/vm.dart';
 
 class Client {
   String baseUrl;
@@ -34,7 +35,7 @@ class Client {
     client.badCertificateCallback =((X509Certificate cert, String host, int port) => true);
     IOClient ioClient = new IOClient(client);
 
-    final response = await ioClient.get(baseUrl + endpoint, headers: {"Accept": "application/json"});
+    final response = await ioClient.get(baseUrl + endpoint, headers: {"Accept": "application/json", "Cookie" : "PVEAuthCookie=" + _ticket, "CSRFPreventionToken": _CSRFPreventionToken});
 
     if (response.statusCode == 200) {
       return response;
@@ -42,7 +43,6 @@ class Client {
       throw Exception("Error executing get request");
     }
   }
-
 
   Future<String> login(String username, String password, String authRealm) async {
     final _sStorage = getSecureStorage();
@@ -118,6 +118,55 @@ class Client {
       print(response.body);
       return false;
     }
+  }
+  
+  
+  Future<List<Node>> getNodes() async {
+    return new Future.sync(() async {
+      List<Node> nodes;
+      await get("nodes").then((response) {
+        print("Nodes RAW: ${response.body}");
+        if (response.statusCode == 200) {
+          var data = json.decode(response.body);
+          print("Nodes Parsed: $data");
+          nodes = data['data'].map<Node>((j) => Node.fromJson(j)).toList();
+        }
+      });
+      return nodes;
+    });
+  }
+  
+  Future<List<VM>> getVMsFromNode(String node) async {
+    return new Future.sync(() async {
+      List<VM> vms;
+      await get("nodes/" + node + "/qemu").then((response) {
+        print("VMs RAW: ${response.body}");
+        if (response.statusCode == 200) {
+          var data = json.decode(response.body);
+          print("VMs Parsed: $data");
+          vms = data['data'].map<VM>((j) => VM.fromJson(j)).toList();
+        }
+      });
+      return vms;
+    });
+  }
+  
+  Future<List<VM>> getAllVMs() async {
+    return new Future.sync(() async {
+      List<Node> nodes;
+      List<VM> vms;
+      
+      await getNodes().then((response) {
+        nodes = response;
+      });
+      
+      for (int i = 0; i < nodes.length; i++) {
+        await getVMsFromNode(nodes[i].node).then((response) {
+          vms.addAll(response);
+        });
+      }
+      return vms;
+    });
   }
 }
 
