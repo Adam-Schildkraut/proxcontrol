@@ -15,7 +15,7 @@ FlutterSecureStorage _sStorage;
 
 void main() async {
 
-  Widget _defaultHome = new GettingStartedSceen();
+  Widget _defaultHome = new GettingStartedScreen();
   _sStorage = new FlutterSecureStorage();
 
   var connectivityResult = await (Connectivity().checkConnectivity());
