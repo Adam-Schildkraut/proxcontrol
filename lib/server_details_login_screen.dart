@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:Proxcontrol/server_auth_login_screen.dart';
-import 'package:Proxcontrol/Client/client.dart';
 import 'package:modal_progress_hud/modal_progress_hud.dart';
+import 'package:Proxcontrol/client/data_handler.dart';
 
 class ServerDetailsLoginScreen extends StatefulWidget {
   @override
@@ -147,9 +147,10 @@ class _ServerDetailsLoginScreenState extends State<ServerDetailsLoginScreen> {
           setState(() {
             _connecting = true;
           });
-
-          API.getAuthRealms(serverAddress, serverPort).then((realms) async {
-            if (realms != null) {
+          DataHandler.init();
+          DataHandler.setBaseUrl(serverAddress, serverPort);
+          Client.requestAuthRealms().then((responseStatus) async {
+            if (responseStatus) {
               await Future.delayed(new Duration(seconds: 2), () {
                 setState(() {
                   _connecting = false;
@@ -158,17 +159,16 @@ class _ServerDetailsLoginScreenState extends State<ServerDetailsLoginScreen> {
               Navigator.pushReplacement(
                   context,
                   MaterialPageRoute(builder: (context) =>
-                      ServerAuthLoginScreen(authRealms: realms,
-                          url: serverAddress,
-                          port: serverPort)));
+                      ServerAuthLoginScreen()));
+            } else {
+              setState(() {
+                _connecting = false;
+              });
+              _showDialog("Connection Error", "An error has occurred while connecting to your server. Please verify your connection details and try again.");
+              _formKey.currentState.reset();
             }
           }).catchError((e) {
             print(e.toString());
-            setState(() {
-              _connecting = false;
-            });
-            _showDialog("Connection Error", "An error has occurred while connecting to your server. Please verify your connection details and try again.");
-            _formKey.currentState.reset();
           });
         }
       },

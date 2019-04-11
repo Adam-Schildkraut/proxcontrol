@@ -1,18 +1,22 @@
 import 'package:flutter/material.dart';
-import 'package:Proxcontrol/Client/Objects/node.dart';
+import 'package:Proxcontrol/client/objects/node.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:Proxcontrol/client/data_handler.dart';
 
 class NodeListTab extends StatefulWidget {
-  final List<Node> nodes;
-  const NodeListTab({Key key, @required this.nodes}) : super(key: key);
 
   @override
-  _NodeListTabState createState() => _NodeListTabState(nodes);
+  _NodeListTabState createState() => _NodeListTabState();
 }
 
 class _NodeListTabState extends State<NodeListTab> {
   List<Node> nodes;
-  _NodeListTabState(this.nodes);
+
+  @override
+  void initState() {
+    super.initState();
+    nodes = DataHandler.getNodeList();
+  }
 
   @override
   Widget build(BuildContext context) {
