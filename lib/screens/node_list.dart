@@ -25,10 +25,26 @@ class _NodeListTabState extends State<NodeListTab> {
       padding: EdgeInsets.all(12),
       separatorBuilder: (context, index) => Divider(),
       itemBuilder: (context, index) {
+        Color iconColor;
+        if ((nodes[index].status).contains("online")) {
+          iconColor = Colors.green;
+        } else if ((nodes[index].status).contains("offline")) {
+          iconColor = Colors.grey;
+        }
+
         return new ListTile(
-          leading: Icon(FontAwesomeIcons.server),
-          title: Text("Name: ${nodes[index].node}"),
-          subtitle: Text("Status: ${nodes[index].status}"),
+          leading: Icon(FontAwesomeIcons.server, color: iconColor),
+          title: Text("${nodes[index].node}"),
+          subtitle: Row(
+            mainAxisAlignment: MainAxisAlignment.start,
+            children: <Widget>[
+              Padding(
+                child: Text("CPU Usage: ${num.parse((nodes[index].cpu * 100).toStringAsFixed(2))}%"),
+                padding: EdgeInsets.only(right: MediaQuery.of(context).size.width / 10),
+              ),
+              Text("RAM Usage: ${double.parse((((nodes[index].mem / 1073741824) / (nodes[index].maxmem / 1073741824)) * 100).toStringAsFixed(2))}%"),
+            ],
+          ),
         );
       },
     );

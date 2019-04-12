@@ -5,6 +5,7 @@ import 'package:Proxcontrol/logged_out_screen.dart';
 import 'package:connectivity/connectivity.dart';
 import 'package:Proxcontrol/internet_required_screen.dart';
 import 'package:Proxcontrol/client/data_handler.dart';
+import 'package:Proxcontrol/client/client.dart';
 
 void main() async {
   // Initialize the Data handler system including client connection support
@@ -20,19 +21,18 @@ void main() async {
     _defaultHome = InternetRequiredScreen();
   } else {
 
-    bool setup = DataHandler.hasBeenSetup();
-    print("$setup");
-    if (setup) {
-      _defaultHome = MainScreen();
-      Client.login().then((returnCode) async {
+    if (await DataHandler.hasBeenSetup()) {
+      await Client.login().then((returnCode) async {
         if (returnCode == 200) {
           await Client.requestVMS();
           await Client.requestNodes();
+          _defaultHome = MainScreen();
         } else {
           _defaultHome = LoggedOutScreen();
         }
       }).catchError((e) {
         print(e.toString());
+        _defaultHome = LoggedOutScreen();
       });
     }
   }

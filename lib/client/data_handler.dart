@@ -1,119 +1,160 @@
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
-import 'package:http/http.dart';
-import 'dart:io';
-import 'dart:convert';
 import 'package:Proxcontrol/client/objects/auth_realm.dart';
 import 'package:Proxcontrol/client/objects/node.dart';
 import 'package:Proxcontrol/client/objects/vm.dart';
-import 'package:Proxcontrol/client/objects/auth_details.dart';
-
 
 class DataHandler {
   static SharedPreferences _preferences;
   static FlutterSecureStorage _secureStorage;
-  static bool _hasBeenSetup;
-  static var _ticket;
-  static var _token;
-  static var _baseUrl;
   static List<AuthRealm> _authRealms = new List<AuthRealm>();
   static List<Node> _nodes = new List<Node>();
   static List<VM> _vms = new List<VM>();
   static List<VM> _containers = new List<VM>();
 
-  /// Initialize the DataHandler system
+  /// Initialize the DataHandler system.
   static Future init() async {
     // Create a connection to the devices secure storage
     _secureStorage = new FlutterSecureStorage();
 
     // Create a SharedPreferences to handle data storage
     _preferences = await SharedPreferences.getInstance();
-
-    // Check if the app has all ready gone through the setup
-    _hasBeenSetup = await (_preferences.get('hasBeenSetup') ?? false);
-    print("Setup Value $_hasBeenSetup");
-
-    if (_hasBeenSetup) {
-      _ticket = await _secureStorage.read(key: 'ticket');
-      _token = await _secureStorage.read(key: 'token');
-      _baseUrl = await _secureStorage.read(key: 'baseUrl');
-    }
   }
 
+  /// A method for debugging. Clears all setting and security info.
   static void clearAllData() async {
     await _preferences.clear();
     await _secureStorage.deleteAll();
   }
 
-  /// Get the current instance of the SharedPreferences
+  /// Set all user configurable preferences to their defaults.
+  static Future setDefaults() async {
+    await setShowTemplates(false);
+  }
+
+  /// Get the current instance of the SharedPreferences.
   static SharedPreferences getSharedPreferences() {
     return _preferences;
   }
 
-  /// Get the current instance of the FlutterSecureStorage
+  /// Get the current instance of the FlutterSecureStorage.
   static FlutterSecureStorage getSecureStorage() {
     return _secureStorage;
   }
 
-  /// Get the base URL of the cluster
-  static String getBaseUrl(String endpoint) {
-    return "$_baseUrl$endpoint";
+  /// Get the base URL of the cluster being accessed.
+  ///
+  /// Returns a [String] containing the full URL of a request to the cluster.
+  /// Accepts the [endpoint] URL as a [String].
+  static Future<String> getBaseUrl(String endpoint) async {
+    return "${await _secureStorage.read(key: 'baseUrl').catchError((e) {
+      print(e.toString());
+    })}$endpoint";
   }
 
-  static void setBaseUrl(String _fqdn, String _port) async {
-    _baseUrl = "https://$_fqdn:$_port/api2/json";
-    await _secureStorage.write(key: 'baseUrl', value: _baseUrl);
+  /// Set the base URL of the cluster being accessed.
+  ///
+  /// Accepts two [String]s, one for the fully qualified domain name or IP address
+  /// and the second for the port.
+  static Future setBaseUrl(String _fqdn, String _port) async {
+    await _secureStorage.write(key: 'baseUrl', value: "https://$_fqdn:$_port/api2/json").catchError((e) {
+      print(e.toString());
+    });
   }
 
-  static bool hasBeenSetup() {
-    return _hasBeenSetup;
+  /// Returns `true` if the app has been run and setup complete.
+  static Future<bool> hasBeenSetup() async {
+    return await (_preferences.get('hasBeenSetup') ?? false);
   }
 
+  /// Sets the boolean value of `hasBeenSetup` in the preferences to the value
+  /// of the [bool] that has been passed in.
   static Future setHasBeenSetup(bool status) async {
-    _hasBeenSetup = status;
-    await _preferences.setBool('hasBeenSetup', status);
+    await _preferences.setBool('hasBeenSetup', status).catchError((e) {
+      print(e.toString());
+    });
   }
 
-  static String getTicket() {
-    return _ticket;
+  static Future<bool> showTemplates() async {
+    return await _preferences.get('showTemplates') ?? false;
   }
 
-  static void setTicket(String _newTicket) async {
-    _ticket = _newTicket;
-    await _secureStorage.write(key: "ticket", value: _newTicket);
+  static Future setShowTemplates(bool newValue) async {
+    await _preferences.setBool('showTemplates', newValue).catchError((e) {
+      print(e.toString());
+    });
   }
 
-  static String getToken() {
-    return _token;
+  /// Returns a [String] containing the current access ticket.
+  static Future<String> getTicket() async {
+    return await _secureStorage.read(key: 'ticket').catchError((e) {
+      print(e.toString());
+    });
   }
 
-  static void setToken(String _newToken) async {
-    _token = _newToken;
-    await _secureStorage.write(key: 'token', value: _newToken);
+  /// Sets the access ticket to the value of the [String] passed into the method.
+  static Future setTicket(String _newTicket) async {
+    await _secureStorage.write(key: "ticket", value: _newTicket).catchError((e) {
+      print(e.toString());
+    });
   }
 
+  /// Returns a [String] containing the CSRFPreventionToken.
+  static Future<String> getToken() async {
+    return await _secureStorage.read(key: 'token').catchError((e) {
+      print(e.toString());
+    });
+  }
+
+  /// Sets the CSRFPreventionToken to the value of the [String] passed into the method.
+  static Future setToken(String _newToken) async {
+    await _secureStorage.write(key: 'token', value: _newToken).catchError((e) {
+      print(e.toString());
+    });
+  }
+
+  /// Returns a [Future<String>] containing the username that has been saved in the devices
+  /// secured storage.
   static Future<String> getUsername() async {
-    return _secureStorage.read(key: 'username');
+    return await _secureStorage.read(key: 'username').catchError((e) {
+      print(e.toString());
+    });
   }
 
-  static void setUsername(String _username) async {
-    await _secureStorage.write(key: 'username', value: _username);
+  /// Sets the username saved in the devices secured storage to the value of the [String]
+  /// that has ben passed to the method.
+  static Future setUsername(String _username) async {
+    await _secureStorage.write(key: 'username', value: _username).catchError((e) {
+      print(e.toString());
+    });
   }
 
-  static Future<String> getRealm() {
-    return _secureStorage.read(key: 'realm');
+  /// Returns a [Future<String>] containing the authentication realm of the cluster
+  /// being accessed.
+  static Future<String> getRealm() async {
+    return await _secureStorage.read(key: 'realm').catchError((e) {
+      print(e.toString());
+    });
   }
 
-  static void setRealm(String _realm) async {
-    await _secureStorage.write(key: 'realm', value: _realm);
+  /// Sets the authentication realm saved in the devices secured storage to the value of the [String]
+  /// that has been passed to the method.
+  static Future setRealm(String _realm) async {
+    await _secureStorage.write(key: 'realm', value: _realm).catchError((e) {
+      print(e.toString());
+    });
   }
 
   static Future<String> getPassword() async {
-    return _secureStorage.read(key: 'password');
+    return await _secureStorage.read(key: 'password').catchError((e) {
+      e.toString();
+    });
   }
 
-  static void setPassword(String _password) async {
-    await _secureStorage.write(key: 'password', value: _password);
+  static Future setPassword(String _password) async {
+    await _secureStorage.write(key: 'password', value: _password).catchError((e) {
+      print(e.toString());
+    });
   }
 
   static List<AuthRealm> getAuthRealms() {
@@ -146,117 +187,5 @@ class DataHandler {
 
   static void setNodesList(List<Node> _list) {
     _nodes = _list;
-  }
-}
-
-class Client extends DataHandler {
-
-  static Future<int> login() async {
-    return new Future.sync(() async {
-      int _status;
-
-      Map<String, dynamic> body = {'username': "${await DataHandler.getUsername()}@${await DataHandler.getRealm()}", 'password': await DataHandler.getPassword()};
-
-      HttpClient client = new HttpClient();
-      client.badCertificateCallback =((X509Certificate cert, String host, int port) => true);
-      IOClient ioClient = new IOClient(client);
-
-      String url = DataHandler.getBaseUrl("/access/ticket");
-      final response = await ioClient.post(url,
-          headers: {"Accept": "application/json", "Content-Type": "application/x-www-form-urlencoded"},
-          body: body,
-          encoding: Encoding.getByName("utf-8")).timeout(Duration(seconds: 10));
-      ioClient.close();
-
-      if (response.statusCode == 401) {
-        _status = 401;
-      } else if (response.statusCode == 200) {
-        _status = 200;
-        var data = json.decode(response.body);
-        AuthDetails details = AuthDetails.fromJson(data['data']);
-
-        DataHandler.setTicket(details.ticket);
-        DataHandler.setToken(details.csrfprevetionToken);
-      } else {
-        _status = -1;
-      }
-
-      return _status;
-    });
-  }
-
-  static Future<bool> requestAuthRealms() async {
-    return new Future.sync(() async {
-      HttpClient client = new HttpClient();
-      client.badCertificateCallback =((X509Certificate cert, String host, int port) => true);
-      IOClient ioClient = new IOClient(client);
-
-      var response = await ioClient.get(DataHandler.getBaseUrl("/access/domains")).timeout(Duration(seconds: 10));
-      ioClient.close();
-
-      if (response.statusCode == 200) {
-        var data = jsonDecode(response.body);
-        DataHandler.setAuthRealms(data['data'].map<AuthRealm>((j) => AuthRealm.fromJson(j)).toList());
-        return true;
-      } else return false;
-    });
-  }
-
-  static Future<Response> _get(String endpoint) async {
-    return new Future.sync(() async {
-      HttpClient client = new HttpClient();
-      client.badCertificateCallback =((X509Certificate cert, String host, int port) => true);
-      IOClient ioClient = new IOClient(client);
-
-      final response = await ioClient.get(
-          DataHandler.getBaseUrl(endpoint),
-          headers: {"Accept": "application/json", "Cookie" : "PVEAuthCookie=" + DataHandler.getTicket(), "CSRFPreventionToken": DataHandler.getToken()});
-      ioClient.close();
-
-      return response;
-    });
-  }
-
-  static Future<bool> requestVMS() {
-    return new Future.sync(() async {
-      await _get("/cluster/resources?type=vm").then((response) {
-        List<VM> responseList = new List<VM>();
-        List<VM> qemu = new List<VM>();
-        List<VM> lxc = new List<VM>();
-
-        if (response.statusCode == 200) {
-          var data = jsonDecode(response.body);
-          responseList = data['data'].map<VM>((j) => VM.fromJson(j)).toList();
-
-          for (int i = 0; i < responseList.length; i++) {
-            if ((responseList[i].type).contains("qemu")) {
-              qemu.add(responseList[i]);
-            } else if ((responseList[i].type).contains("lxc")) {
-              lxc.add(responseList[i]);
-            }
-          }
-
-          DataHandler.setVMList(qemu);
-          DataHandler.setContainerList(lxc);
-          return true;
-        } else return false;
-      }).catchError((e) {
-        print(e.toString());
-      });
-    });
-  }
-
-  static Future<bool> requestNodes() {
-    return new Future.sync(() async {
-      await _get("/cluster/resources?type=node").then((response) {
-        if (response.statusCode == 200) {
-          var data = jsonDecode(response.body);
-          DataHandler.setNodesList(data['data'].map<Node>((j) => Node.fromJson(j)).toList());
-          return true;
-        } else return false;
-      }).catchError((e) {
-        print(e.toString());
-      });
-    });
   }
 }

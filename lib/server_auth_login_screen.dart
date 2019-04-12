@@ -4,6 +4,7 @@ import 'package:modal_progress_hud/modal_progress_hud.dart';
 import 'package:Proxcontrol/main_screen.dart';
 import 'package:Proxcontrol/client/objects/auth_realm.dart';
 import 'package:Proxcontrol/client/data_handler.dart';
+import 'package:Proxcontrol/client/client.dart';
 
 class ServerAuthLoginScreen extends StatefulWidget {
   @override
@@ -65,7 +66,7 @@ class _ServerAuthLoginScreenState extends State<ServerAuthLoginScreen> {
 
     final realmSelector = FormField(
       validator: (value) {
-        if (value.isEmpty) {
+        if (value == null) {
           return 'Please select an Authentication Realm';
         }
       },
@@ -181,18 +182,19 @@ class _ServerAuthLoginScreenState extends State<ServerAuthLoginScreen> {
             _processing = true;
           });
 
-          DataHandler.setRealm(serverRealm);
-          DataHandler.setUsername(serverUsername);
-          DataHandler.setPassword(serverPassword);
+          await DataHandler.setRealm(serverRealm);
+          await DataHandler.setUsername(serverUsername);
+          await DataHandler.setPassword(serverPassword);
+          await DataHandler.setDefaults();
 
-          Client.login().then((responseCode) async {
+          await Client.login().then((responseCode) async {
             if (responseCode == 200) {
               await Future.delayed(new Duration(seconds: 1), () {
                 setState(() {
                   _processing = false;
                 });
               });
-              DataHandler.setHasBeenSetup(true);
+              await DataHandler.setHasBeenSetup(true);
               await Client.requestVMS();
               await Client.requestNodes();
               Navigator.pushReplacement(
@@ -217,6 +219,9 @@ class _ServerAuthLoginScreenState extends State<ServerAuthLoginScreen> {
             }
           }).catchError((e) {
             print(e.toString());
+          }).timeout(new Duration(seconds: 10), onTimeout: () {
+            _showDialog("Connection Timed Out", "Your connection has timed out after 10 seconds of no activity. Please check your connection settings and try again.");
+            _formKey.currentState.reset();
           });
         }
       },
@@ -277,6 +282,7 @@ class _ServerAuthLoginScreenState extends State<ServerAuthLoginScreen> {
       );
     }
 
+    /*
     _buildHorizontalLayout() {
       return GridView.count(
         shrinkWrap: true,
@@ -325,6 +331,7 @@ class _ServerAuthLoginScreenState extends State<ServerAuthLoginScreen> {
         ],
       );
     }
+    */
     
     return Scaffold(
         appBar: AppBar(

@@ -3,6 +3,7 @@ import 'package:Proxcontrol/client/data_handler.dart';
 import 'package:Proxcontrol/screens/container_list.dart';
 import 'package:Proxcontrol/screens/node_list.dart';
 import 'package:Proxcontrol/screens/vm_list.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
 
 class MainScreen extends StatefulWidget {
@@ -11,9 +12,27 @@ class MainScreen extends StatefulWidget {
 }
 
 class _MainScreenState extends State<MainScreen> {
+  String _ticket;
+  String _username;
+  bool _showTemplates = false;
 
   @override
   void initState() {
+    DataHandler.showTemplates().then((status) {
+      _showTemplates = status;
+    });
+
+    DataHandler.getTicket().then((ticket) {
+      setState(() {
+        _ticket = ticket;
+      });
+    });
+
+    DataHandler.getUsername().then((username) {
+      setState(() {
+        _username = username;
+      });
+    });
     super.initState();
   }
 
@@ -22,7 +41,7 @@ class _MainScreenState extends State<MainScreen> {
     final screenWidth = MediaQuery.of(context).size.width;
     final screenHeight = MediaQuery.of(context).size.height;
 
-    return new DefaultTabController(
+    return new DefaultTabController (
         length: 3,
         child: Scaffold(
             appBar: AppBar(
@@ -45,12 +64,23 @@ class _MainScreenState extends State<MainScreen> {
                       color: Colors.indigo,
                     ),
                   ),
+                  SwitchListTile(
+                    title: Text("Display Templates"),
+                    value: _showTemplates,
+                    secondary: Icon(FontAwesomeIcons.copy),
+                    onChanged: (status) async {
+                      setState(() {
+                        _showTemplates = status;
+                      });
+                      await DataHandler.setShowTemplates(status);
+                    },
+                  ),
                   ListTile(
-                    title: Text("Username: ${DataHandler.getUsername()}"),
+                    title: Text("Username: $_username"),
                   ),
                   Divider(),
                   ListTile(
-                    title: Text("Ticket: ${DataHandler.getTicket()}"),
+                    title: Text("Ticket: $_ticket"),
                   ),
                   Container(
                     padding: EdgeInsets.only(top: screenHeight / 20,left: screenWidth / 12, right: screenWidth / 12, bottom: screenHeight / 40),

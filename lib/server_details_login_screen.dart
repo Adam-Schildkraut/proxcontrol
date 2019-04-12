@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:Proxcontrol/server_auth_login_screen.dart';
 import 'package:modal_progress_hud/modal_progress_hud.dart';
 import 'package:Proxcontrol/client/data_handler.dart';
+import 'package:Proxcontrol/client/client.dart';
 
 class ServerDetailsLoginScreen extends StatefulWidget {
   @override
@@ -140,16 +141,16 @@ class _ServerDetailsLoginScreenState extends State<ServerDetailsLoginScreen> {
     final nextButton = RaisedButton(
       shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(24)),
-      onPressed: () {
+      onPressed: () async {
         if(_formKey.currentState.validate()) {
           _formKey.currentState.save();
 
           setState(() {
             _connecting = true;
           });
-          DataHandler.init();
-          DataHandler.setBaseUrl(serverAddress, serverPort);
-          Client.requestAuthRealms().then((responseStatus) async {
+          await DataHandler.init();
+          await DataHandler.setBaseUrl(serverAddress, serverPort);
+          await Client.requestAuthRealms().then((responseStatus) async {
             if (responseStatus) {
               await Future.delayed(new Duration(seconds: 2), () {
                 setState(() {
@@ -169,6 +170,9 @@ class _ServerDetailsLoginScreenState extends State<ServerDetailsLoginScreen> {
             }
           }).catchError((e) {
             print(e.toString());
+          }).timeout(new Duration(seconds: 10), onTimeout: () {
+            _showDialog("Connection Timed Out", "Your connection has timed out after 10 seconds of no activity. Please check your connection settings and try again.");
+            _formKey.currentState.reset();
           });
         }
       },
@@ -223,6 +227,7 @@ class _ServerDetailsLoginScreenState extends State<ServerDetailsLoginScreen> {
       );
     }
 
+    /*
     _buildHorizontalLayout() {
       return GridView.count(
         //shrinkWrap: true,
@@ -271,6 +276,7 @@ class _ServerDetailsLoginScreenState extends State<ServerDetailsLoginScreen> {
         ],
       );
     }
+    */
 
     return Scaffold(
       appBar: AppBar(
