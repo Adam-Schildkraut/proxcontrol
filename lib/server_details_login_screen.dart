@@ -25,7 +25,6 @@ class _ServerDetailsLoginScreenState extends State<ServerDetailsLoginScreen> {
     final double screenWidth = MediaQuery.of(context).size.width;
     final double screenHeight = MediaQuery.of(context).size.height;
 
-
     void _showDialog(String title, String message) {
       // flutter defined function
       showDialog(
@@ -50,13 +49,46 @@ class _ServerDetailsLoginScreenState extends State<ServerDetailsLoginScreen> {
     }
 
     final image = Container(
-      child: Hero(
-        tag: 'logo',
-        child: CircleAvatar(
-          backgroundColor: Colors.transparent,
-          radius: screenWidth / 4,
-          child: Image.asset('assets/logo.png')),
+      alignment: Alignment.topCenter,
+      width: MediaQuery.of(context).size.width,
+      height: MediaQuery.of(context).size.height / 2.5,
+      decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [
+              Color(0xFFf45d27),
+              Color(0xFFf5851f)
+            ],
+          ),
+          borderRadius: BorderRadius.only(
+              bottomLeft: Radius.circular(90)
+          )
       ),
+      child: Container(
+        child: Stack(
+          children: <Widget>[
+            Align(
+              alignment: Alignment.center,
+              child: Image.asset(
+                'assets/Prox Logo.png',
+                height: 100,
+                width: 100,
+              ),
+            ),
+            Align(
+              alignment: FractionalOffset(0.9, 0.85), 
+              child: Text(
+                "Connect To Server",
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 17,
+                )
+              )
+            ),
+          ]
+        ),
+      )
     );
 
     final serverAddressField = Container(
@@ -137,10 +169,13 @@ class _ServerDetailsLoginScreenState extends State<ServerDetailsLoginScreen> {
       ),
     );
 
-    final nextButton = RaisedButton(
-      shape: RoundedRectangleBorder(
+    final nextButton = ButtonTheme (
+        minWidth: 250.0,
+        height: 20.0,
+        child: RaisedButton(
+        shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(24)),
-      onPressed: () {
+        onPressed: () {
         if(_formKey.currentState.validate()) {
           _formKey.currentState.save();
 
@@ -173,50 +208,51 @@ class _ServerDetailsLoginScreenState extends State<ServerDetailsLoginScreen> {
         }
       },
 
-      padding: EdgeInsets.all(10),
-      color: Colors.indigoAccent,
-      child: Text('NEXT', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold))
+        padding: EdgeInsets.all(10),
+        color: Colors.orange[300],
+        child: Text('NEXT', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.white))
+      )
     );
 
     _buildVerticalLayout() {
       return Form(
         key: _formKey,
-        child: ListView(
-          shrinkWrap: true,
+        child: Stack(
           children: <Widget>[
-            Padding(
-              padding: EdgeInsets.only(
-                  top: screenHeight / 15,
-                  left: screenWidth / 10,
-                  right: screenWidth / 10,
-                  bottom: screenHeight / 25),
-              child: image,
-            ),
-
-            Padding(
-              padding: EdgeInsets.only(
+            image,
+            
+              Align (
+                alignment: FractionalOffset(0.5, 0.49),
+                child: Padding(
+                  padding: EdgeInsets.only(
+                      left: screenWidth / 12,
+                      right: screenWidth / 12,
+                      top: screenHeight / 30),
+                  child: serverAddressField,
+                ),
+              ),
+                  
+              Align (
+                alignment: FractionalOffset(0.5, 0.6),
+                child: Padding(
+                  padding: EdgeInsets.only(
                   left: screenWidth / 12,
                   right: screenWidth / 12,
                   top: screenHeight / 30),
-              child: serverAddressField,
-            ),
+                  child: serverPortField,
+                ),
+              ),
 
-            Padding(
+            Align(
+              alignment: FractionalOffset(0.5, 0.8),
+              child: Padding(
               padding: EdgeInsets.only(
-                  left: screenWidth / 12,
-                  right: screenWidth / 12,
-                  top: screenHeight / 20,
-                  bottom: screenHeight / 20),
-              child: serverPortField,
-            ),
-
-            Padding(
-              padding: EdgeInsets.only(
-                  left: screenWidth / 12,
-                  right: screenWidth / 12,
-                  top: screenHeight / 20,
-                  bottom: screenHeight / 30),
-              child: nextButton,
+                left: screenWidth / 12,
+                right: screenWidth / 12,
+                top: screenHeight / 20,
+                bottom: screenHeight / 30),
+                child: nextButton,
+              ),
             ),
           ],
         ),
@@ -264,7 +300,7 @@ class _ServerDetailsLoginScreenState extends State<ServerDetailsLoginScreen> {
                     right: screenWidth / 18,
                     top: screenHeight / 20,
                     bottom: screenHeight / 30),
-                child: nextButton,
+                child: nextButton
               ),
             ],
           )
@@ -273,9 +309,6 @@ class _ServerDetailsLoginScreenState extends State<ServerDetailsLoginScreen> {
     }
 
     return Scaffold(
-      appBar: AppBar(
-          title: Text('Server Connection Details'),
-          centerTitle: true),
       body: ModalProgressHUD(
           inAsyncCall: _connecting,
           child: _buildVerticalLayout())
