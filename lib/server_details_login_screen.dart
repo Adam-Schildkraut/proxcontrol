@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:Proxcontrol/server_auth_login_screen.dart';
 import 'package:Proxcontrol/Client/client.dart';
 import 'package:modal_progress_hud/modal_progress_hud.dart';
+import 'package:gradient_widgets/gradient_widgets.dart';
 
 class ServerDetailsLoginScreen extends StatefulWidget {
   @override
@@ -49,7 +50,6 @@ class _ServerDetailsLoginScreenState extends State<ServerDetailsLoginScreen> {
     }
 
     final image = Container(
-      alignment: Alignment.topCenter,
       width: MediaQuery.of(context).size.width,
       height: MediaQuery.of(context).size.height / 2.5,
       decoration: BoxDecoration(
@@ -169,149 +169,144 @@ class _ServerDetailsLoginScreenState extends State<ServerDetailsLoginScreen> {
       ),
     );
 
-    final nextButton = ButtonTheme (
-        minWidth: 250.0,
-        height: 20.0,
-        child: RaisedButton(
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(24)),
-        onPressed: () {
-        if(_formKey.currentState.validate()) {
-          _formKey.currentState.save();
+    final nextButton = Center(
+      child: Column(
+      crossAxisAlignment: CrossAxisAlignment.center,
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        GradientButton(
+          callback: () {
+          if(_formKey.currentState.validate()) {
+            _formKey.currentState.save();
 
-          setState(() {
-            _connecting = true;
-          });
-
-          API.getAuthRealms(serverAddress, serverPort).then((realms) async {
-            if (realms != null) {
-              await Future.delayed(new Duration(seconds: 2), () {
-                setState(() {
-                  _connecting = false;
-                });
-              });
-              Navigator.pushReplacement(
-                  context,
-                  MaterialPageRoute(builder: (context) =>
-                      ServerAuthLoginScreen(authRealms: realms,
-                          url: serverAddress,
-                          port: serverPort)));
-            }
-          }).catchError((e) {
-            print(e.toString());
             setState(() {
-              _connecting = false;
+              _connecting = true;
             });
-            _showDialog("Connection Error", "An error has occurred while connecting to your server. Please verify your connection details and try again.");
-            _formKey.currentState.reset();
-          });
-        }
-      },
 
-        padding: EdgeInsets.all(10),
-        color: Colors.orange[300],
-        child: Text('NEXT', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.white))
-      )
+            API.getAuthRealms(serverAddress, serverPort).then((realms) async {
+              if (realms != null) {
+                await Future.delayed(new Duration(seconds: 2), () {
+                  setState(() {
+                    _connecting = false;
+                  });
+                });
+                Navigator.pushReplacement(
+                    context,
+                    MaterialPageRoute(builder: (context) =>
+                        ServerAuthLoginScreen(authRealms: realms,
+                            url: serverAddress,
+                            port: serverPort)));
+              }
+            }).catchError((e) {
+              print(e.toString());
+              setState(() {
+                _connecting = false;
+              });
+              _showDialog("Connection Error", "An error has occurred while connecting to your server. Please verify your connection details and try again.");
+              _formKey.currentState.reset();
+            });
+          }
+        },
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [
+              Color(0xFFff9321),
+              Color(0xFFffb946)
+            ],
+          ),
+          increaseWidthBy: 180,
+          increaseHeightBy: 5,
+          child: Text('NEXT', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.white))
+          )
+        ]
+      ),
     );
 
     _buildVerticalLayout() {
       return Form(
         key: _formKey,
-        child: Stack(
+        child: ListView(
+          padding: EdgeInsets.all(0),
           children: <Widget>[
             image,
             
-              Align (
-                alignment: FractionalOffset(0.5, 0.49),
-                child: Padding(
-                  padding: EdgeInsets.only(
-                      left: screenWidth / 12,
-                      right: screenWidth / 12,
-                      top: screenHeight / 30),
-                  child: serverAddressField,
-                ),
-              ),
-                  
-              Align (
-                alignment: FractionalOffset(0.5, 0.6),
-                child: Padding(
-                  padding: EdgeInsets.only(
-                  left: screenWidth / 12,
-                  right: screenWidth / 12,
-                  top: screenHeight / 30),
-                  child: serverPortField,
-                ),
-              ),
-
             Align(
-              alignment: FractionalOffset(0.5, 0.8),
+              alignment: FractionalOffset(0.5, 0.49),
               child: Padding(
-              padding: EdgeInsets.only(
-                left: screenWidth / 12,
-                right: screenWidth / 12,
-                top: screenHeight / 20,
-                bottom: screenHeight / 30),
-                child: nextButton,
+                padding: EdgeInsets.only(
+                    top: screenHeight / 16,
+                    bottom: screenHeight / 24,
+                    left: screenWidth / 12,
+                    right: screenWidth / 12,
+                  ),
+                child: serverAddressField
               ),
             ),
+                
+            Align(
+              alignment: FractionalOffset(0.5, 0.6),
+              child: Padding(
+                padding: EdgeInsets.only(
+                  bottom: screenHeight / 12,
+                  left: screenWidth / 12,
+                  right: screenWidth / 12,
+                  top: screenHeight / 24,
+                ),
+                child: serverPortField,
+              ),
+            ),
+            
+            Align(
+              alignment: FractionalOffset(0.5, 0.6),
+              child: nextButton,
+            ),      
           ],
         ),
       );
     }
 
     _buildHorizontalLayout() {
-      return GridView.count(
-        //shrinkWrap: true,
-        crossAxisCount: 2,
-        children: <Widget>[
-          Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: <Widget>[
-              Padding(
-                padding: EdgeInsets.only(
-                    left: screenWidth / 10,
-                    right: screenWidth / 10),
-                child: image,
-              ),
-            ],
-          ),
+      return Form(
+        key: _formKey,
+        child: Stack(
+          children: <Widget>[
+            Padding(
+              padding: EdgeInsets.only(
+                  left: screenWidth / 10,
+                  right: screenWidth / 10),
+              child: image,
+            ),
 
-          ListView(
-            shrinkWrap: true,
-            children: <Widget>[
-              Padding(
-                padding: EdgeInsets.only(
-                    right: screenWidth / 18,
-                    top: screenHeight / 5),
-                child: serverAddressField,
+            Padding(
+              padding: EdgeInsets.only(
+                  right: screenWidth / 18,
+                  top: screenHeight / 2,
+                  bottom: screenHeight / 10
               ),
+              child: serverAddressField,
+            ),
+            
+            Padding(
+              padding: EdgeInsets.only(
+                  left: screenWidth / 10,
+                  right: screenWidth / 10,
+                  top: screenHeight / 1.7
+                  ),
+              child: nextButton,
+            ),
 
-              Padding(
-                padding: EdgeInsets.only(
-                    right: screenWidth / 18,
-                    top: screenHeight / 30,
-                    bottom: screenHeight / 20),
-                child: serverPortField,
-              ),
-
-              Padding(
-                padding: EdgeInsets.only(
-                    right: screenWidth / 18,
-                    top: screenHeight / 20,
-                    bottom: screenHeight / 30),
-                child: nextButton
-              ),
-            ],
-          )
-        ],
+            nextButton,
+          ],
+        )
       );
     }
 
     return Scaffold(
       body: ModalProgressHUD(
           inAsyncCall: _connecting,
-          child: _buildVerticalLayout())
+          child: _buildVerticalLayout()
+      )
     );
   }
 }
