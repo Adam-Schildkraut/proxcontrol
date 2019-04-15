@@ -6,6 +6,7 @@ import 'package:Proxcontrol/client/objects/auth_details.dart';
 import 'package:Proxcontrol/client/objects/auth_realm.dart';
 import 'package:Proxcontrol/client/objects/vm.dart';
 import 'package:Proxcontrol/client/objects/node.dart';
+import 'package:Proxcontrol/client/objects/vm_stat.dart';
 
 class Client extends DataHandler {
 
@@ -37,6 +38,7 @@ class Client extends DataHandler {
       _status = -1;
     }
 
+    print("Login Method Completed - Retuning Login status: $_status");
     return _status;
   }
 
@@ -74,6 +76,7 @@ class Client extends DataHandler {
 
   static Future<bool> requestVMS() {
     return new Future.sync(() async {
+      bool _received;
       await _get("/cluster/resources?type=vm").then((response) {
         List<VM> responseList = new List<VM>();
         List<VM> qemu = new List<VM>();
@@ -96,25 +99,50 @@ class Client extends DataHandler {
 
           DataHandler.setVMList(qemu);
           DataHandler.setContainerList(lxc);
-          return true;
-        } else return false;
+          print("VMs and Containers received");
+          _received = true;
+        } else _received = false;
       }).catchError((e) {
         print(e.toString());
+        _received = false;
       });
+      return _received;
     });
   }
 
   static Future<bool> requestNodes() {
     return new Future.sync(() async {
+      bool _received;
       await _get("/cluster/resources?type=node").then((response) {
         if (response.statusCode == 200) {
           var data = jsonDecode(response.body);
           DataHandler.setNodesList(data['data'].map<Node>((j) => Node.fromJson(j)).toList());
-          return true;
-        } else return false;
+          print("Nodes received");
+          _received = true;
+        } else _received = false;
       }).catchError((e) {
         print(e.toString());
+        _received = false;
       });
+      return _received;
+    });
+  }
+
+  static Future<bool> requestVMStats(String _node, int _vmid, String _timeFrame, String _consolidationType) {
+    return new Future.sync(() async {
+      bool _received;
+      await _get("/nodes/$_node/qemu/$_vmid/rrddata?timeframe=$_timeFrame&cf=$_consolidationType").then((response) {
+        if (response.statusCode == 200) {
+          var data = jsonDecode(response.body);
+          DataHandler.setVMStatsList(data['data'].map<VMStat>((j) => VMStat.fromJson(j)).toList());
+          print("VM Stats for $_vmid received");
+          _received = true;
+        } else _received = false;
+      }).catchError((e) {
+        print(e.toString());
+        _received = false;
+      });
+      return _received;
     });
   }
 }

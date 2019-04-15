@@ -1,7 +1,7 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:modal_progress_hud/modal_progress_hud.dart';
-import 'package:Proxcontrol/main_screen.dart';
+import 'package:Proxcontrol/screens/main_lists/main_lists_screen.dart';
 import 'package:Proxcontrol/client/objects/auth_realm.dart';
 import 'package:Proxcontrol/client/data_handler.dart';
 import 'package:Proxcontrol/client/client.dart';

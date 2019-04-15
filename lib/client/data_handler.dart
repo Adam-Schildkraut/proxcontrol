@@ -3,6 +3,7 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:Proxcontrol/client/objects/auth_realm.dart';
 import 'package:Proxcontrol/client/objects/node.dart';
 import 'package:Proxcontrol/client/objects/vm.dart';
+import 'package:Proxcontrol/client/objects/vm_stat.dart';
 
 class DataHandler {
   static SharedPreferences _preferences;
@@ -11,6 +12,7 @@ class DataHandler {
   static List<Node> _nodes = new List<Node>();
   static List<VM> _vms = new List<VM>();
   static List<VM> _containers = new List<VM>();
+  static List<VMStat> _vmStatsList = new List<VMStat>();
 
   /// Initialize the DataHandler system.
   static Future init() async {
@@ -19,6 +21,7 @@ class DataHandler {
 
     // Create a SharedPreferences to handle data storage
     _preferences = await SharedPreferences.getInstance();
+    print("DataHandler Initialized.");
   }
 
   /// A method for debugging. Clears all setting and security info.
@@ -187,5 +190,13 @@ class DataHandler {
 
   static void setNodesList(List<Node> _list) {
     _nodes = _list;
+  }
+
+  static List<VMStat> getVMStatsList() {
+    return _vmStatsList;
+  }
+
+  static void setVMStatsList(List<VMStat> _list) {
+    _vmStatsList = _list;
   }
 }

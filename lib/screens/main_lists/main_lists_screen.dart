@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:Proxcontrol/client/data_handler.dart';
-import 'package:Proxcontrol/screens/container_list.dart';
-import 'package:Proxcontrol/screens/node_list.dart';
-import 'package:Proxcontrol/screens/vm_list.dart';
+import 'package:Proxcontrol/screens/main_lists/tabs/container_list.dart';
+import 'package:Proxcontrol/screens/main_lists/tabs/node_list.dart';
+import 'package:Proxcontrol/screens/main_lists/tabs/vm_list.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
 
