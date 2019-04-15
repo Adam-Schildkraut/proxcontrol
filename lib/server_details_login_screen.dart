@@ -259,55 +259,9 @@ class _ServerDetailsLoginScreenState extends State<ServerDetailsLoginScreen> {
       );
     }
 
-    _buildHorizontalLayout() {
-      return GridView.count(
+
+              ),
         //shrinkWrap: true,
-        crossAxisCount: 2,
-        children: <Widget>[
-          Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: <Widget>[
-              Padding(
-                padding: EdgeInsets.only(
-                    left: screenWidth / 10,
-                    right: screenWidth / 10),
-                child: image,
-              ),
-            ],
-          ),
-
-          ListView(
-            shrinkWrap: true,
-            children: <Widget>[
-              Padding(
-                padding: EdgeInsets.only(
-                    right: screenWidth / 18,
-                    top: screenHeight / 5),
-                child: serverAddressField,
-              ),
-
-              Padding(
-                padding: EdgeInsets.only(
-                    right: screenWidth / 18,
-                    top: screenHeight / 30,
-                    bottom: screenHeight / 20),
-                child: serverPortField,
-              ),
-
-              Padding(
-                padding: EdgeInsets.only(
-                    right: screenWidth / 18,
-                    top: screenHeight / 20,
-                    bottom: screenHeight / 30),
-                child: nextButton
-              ),
-            ],
-          )
-        ],
-      );
-    }
-
     return Scaffold(
       body: ModalProgressHUD(
           inAsyncCall: _connecting,

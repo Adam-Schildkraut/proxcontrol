@@ -31,6 +31,7 @@ flutter:
   assets:
     - assets/logo.png
     - assets/Prox Logo.png
+    - assets/onboardingBackgroundImage.jpg
   fonts:
     - family: Nunito
       fonts:

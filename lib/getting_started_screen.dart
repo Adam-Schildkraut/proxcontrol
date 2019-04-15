@@ -25,12 +25,23 @@ class _WelcomeState extends State<GettingStartedScreen> {
     return Scaffold(
       body: Stack(
         children: <Widget>[
+          Container(
+            decoration: BoxDecoration(
+              color: Color(0xFF4d4d4d),
+            ),
+          ),
+          Align(
+            alignment: FractionalOffset(0.5, 0.05),
+            child: Image(
+              image: AssetImage("assets/onboardingBackgroundImage.jpg")
+            ),
+          ),
           PageView(
             children: <Widget>[
-              Walkthrougth(titleTextContent: "Welcome to Proxcontrol", descriptionTextContent: "Take control of your Proxmox cluster today. With everything you need to manage your installation, Proxcontrol is the perfect mobile companion app.", showDone: false,),
-              Walkthrougth(titleTextContent: "VM Management", descriptionTextContent: "With the ablity to Start/Stop/Restart, Migrate, Create, and Delete your Containers, Proxcontrol has you covered.", showDone: false,),
-              Walkthrougth(titleTextContent: "LXC Management", descriptionTextContent: "With the ablity to Start/Stop/Restart, Migrate, Create, and Delete your Containers, Procontrol has you covered.", showDone: false,),
-              Walkthrougth(titleTextContent: "Cluster Management", descriptionTextContent: "With the ablity to Start/Stop/Restart, Migrate, Create, and Delete your Containers, Procontrol has you covered.", showDone: true,),
+              Walkthrougth(titleTextContent: "Welcome to Proxcontrol", descriptionTextContent: "Take control of your Proxmox cluster today. With everything you need to manage your installation, Proxcontrol is the perfect mobile companion app.", showDone: false, currentPage: currentIndexPage,),
+              Walkthrougth(titleTextContent: "VM Management", descriptionTextContent: "With the ablity to Start/Stop/Restart, Migrate, Create, and Delete your Containers, Proxcontrol has you covered.", showDone: false, currentPage: currentIndexPage),
+              Walkthrougth(titleTextContent: "LXC Management", descriptionTextContent: "With the ablity to Start/Stop/Restart, Migrate, Create, and Delete your Containers, Procontrol has you covered.", showDone: false, currentPage: currentIndexPage),
+              Walkthrougth(titleTextContent: "Cluster Management", descriptionTextContent: "With the ablity to Start/Stop/Restart, Migrate, Create, and Delete your Containers, Procontrol has you covered.", showDone: true, currentPage: currentIndexPage),
             ],
             onPageChanged: (value) {
               setState(() => currentIndexPage = value);
@@ -83,33 +94,45 @@ class Walkthrougth extends StatelessWidget {
   final String titleTextContent;
   final String descriptionTextContent;
   final bool showDone;
-  Walkthrougth({Key key, @required this.titleTextContent, @required this.descriptionTextContent, @required this.showDone}) : super(key: key);
+  final int currentPage;
+  Walkthrougth({Key key, @required this.titleTextContent, @required this.descriptionTextContent, @required this.showDone, @required this.currentPage}) : super(key: key);
   @override
   Widget build(BuildContext context) {
     return Container(
       height: MediaQuery.of(context).size.height,
       width: MediaQuery.of(context).size.width,
       //background colour:
-      decoration: BoxDecoration(color: Color.fromARGB(64, 252, 233, 205)),
+      //decoration: BoxDecoration(color: Color.fromARGB(64, 252, 233, 205)),
       child: Stack(
         children: <Widget>[
           Container(
             alignment: FractionalOffset(0.5, 0.15),
-              child: FittedBox(
-                child: Image(
+            child: FittedBox(
+              child: Image(
                 image: AssetImage('assets/Prox Logo.png'),        
                 width: MediaQuery.of(context).size.width / 4,
                 height: MediaQuery.of(context).size.height / 4,
               ),
             ),
           ),
+          Container(
+            alignment: FractionalOffset(0.5, 0.61 ),
+            child: FittedBox(
+              child: getIconFromPage(currentPage, context)
+            )
+          ),
           //Title Container
           Container(
-            padding: EdgeInsets.all(5.0),
             alignment: FractionalOffset(0.5, 0.5),
             child: Stack(
               children: <Widget>[
                 Container(
+                  padding: EdgeInsets.only(
+                    top: MediaQuery.of(context).size.height / 20,
+                    bottom: MediaQuery.of(context).size.height / 20,
+                    left: MediaQuery.of(context).size.width / 24,
+                    right: MediaQuery.of(context).size.width / 24
+                  ),
                   alignment: FractionalOffset(0.5, 0.45),
                   child: Text(
                     titleTextContent,
@@ -122,6 +145,12 @@ class Walkthrougth extends StatelessWidget {
                 ),
                 //Description Container
                 Container(
+                  padding: EdgeInsets.only(
+                    top: MediaQuery.of(context).size.height / 4,
+                    bottom: MediaQuery.of(context).size.height / 20,
+                    left: MediaQuery.of(context).size.width / 16,
+                    right: MediaQuery.of(context).size.width / 16
+                  ),
                   alignment: FractionalOffset(0.5, 0.75),
                   child: Text(
                     descriptionTextContent,
@@ -138,5 +167,22 @@ class Walkthrougth extends StatelessWidget {
         ],
       ),
     );
+  }
+
+  getIconFromPage(int currentPage, BuildContext context) {
+    var height = MediaQuery.of(context).size.height;
+    var width = MediaQuery.of(context).size.width;
+    switch(currentPage) {
+      case 0:
+        return Icon(Icons.dns, color: Colors.grey.withOpacity(0.4), size: height / 10);
+      case 1:
+        return Icon(Icons.equalizer, color: Colors.grey.withOpacity(0.4), size: height / 10);
+      case 2:
+        return Icon(Icons.layers, color: Colors.grey.withOpacity(0.4), size: height / 10);
+      case 3:
+        return Icon(Icons.input, color: Colors.grey.withOpacity(0.4), size: height / 10);
+      default:
+        return Icon(Icons.edit, color: Colors.grey.withOpacity(0.4), size: height / 10);
+    }
   }
 }
