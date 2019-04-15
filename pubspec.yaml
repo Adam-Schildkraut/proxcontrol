@@ -21,6 +21,7 @@ dependencies:
   intro_views_flutter: ^2.6.0
   modal_progress_hud: ^0.1.3
   connectivity: ^0.4.2+2
+  gradient_widgets: ^0.4.0
 
 dev_dependencies:
   flutter_test:
@@ -31,6 +32,7 @@ flutter:
   assets:
     - assets/logo.png
     - assets/Prox Logo.png
+    - assets/onboardingBackgroundImage.jpg
   fonts:
     - family: Nunito
       fonts:
