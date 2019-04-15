@@ -1,17 +1,3 @@
-/*
-class Node {
-  NodeData data;
-
-  Node({this.data});
-
-  factory Node.fromJson(Map<String, dynamic> parsedJson) {
-    return Node(
-        data: NodeData.fromJson(parsedJson['data'])
-    );
-  }
-}
-*/
-
 class Node {
   final String level;
   final int maxcpu;

@@ -1,34 +1,30 @@
 import 'dart:async';
-import 'package:Proxcontrol/Client/client.dart';
 import 'package:flutter/material.dart';
-import 'package:Proxcontrol/Client/Objects/auth_realm.dart';
 import 'package:modal_progress_hud/modal_progress_hud.dart';
-import 'package:Proxcontrol/main_screen.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-import 'package:Proxcontrol/Client/Objects/node.dart';
-import 'package:Proxcontrol/Client/Objects/vm.dart';
+import 'package:Proxcontrol/screens/main_lists/main_lists_screen.dart';
+import 'package:Proxcontrol/client/objects/auth_realm.dart';
+import 'package:Proxcontrol/client/data_handler.dart';
+import 'package:Proxcontrol/client/client.dart';
 
 class ServerAuthLoginScreen extends StatefulWidget {
-  final List<AuthRealm> authRealms;
-  final String url;
-  final String port;
-  const ServerAuthLoginScreen({Key key, @required this.authRealms, @required this.url, @required this.port}) : super(key: key);
-
   @override
-  _ServerAuthLoginScreenState createState() => _ServerAuthLoginScreenState(authRealms, url, port);
+  _ServerAuthLoginScreenState createState() => _ServerAuthLoginScreenState();
 }
 
 class _ServerAuthLoginScreenState extends State<ServerAuthLoginScreen> {
   List<AuthRealm> authRealms;
-  String url;
-  String port;
-  _ServerAuthLoginScreenState(this.authRealms, this.url, this.port);
   final _formKey = GlobalKey<FormState>();
 
   String serverRealm;
   String serverUsername;
   String serverPassword;
   bool _processing = false;
+
+  @override
+  void initState() {
+    super.initState();
+    authRealms = DataHandler.getAuthRealms();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -70,7 +66,7 @@ class _ServerAuthLoginScreenState extends State<ServerAuthLoginScreen> {
 
     final realmSelector = FormField(
       validator: (value) {
-        if (value.isEmpty) {
+        if (value == null) {
           return 'Please select an Authentication Realm';
         }
       },
@@ -178,7 +174,7 @@ class _ServerAuthLoginScreenState extends State<ServerAuthLoginScreen> {
     final nextButton = RaisedButton(
       shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(24)),
-      onPressed: () {
+      onPressed: () async {
         if (_formKey.currentState.validate()) {
           _formKey.currentState.save();
 
@@ -186,9 +182,25 @@ class _ServerAuthLoginScreenState extends State<ServerAuthLoginScreen> {
             _processing = true;
           });
 
-          Client client = new Client(url, port);
-          client.login(serverUsername, serverPassword, serverRealm).then((response) async {
-            if (response.contains("AUTH_FAIL")) {
+          await DataHandler.setRealm(serverRealm);
+          await DataHandler.setUsername(serverUsername);
+          await DataHandler.setPassword(serverPassword);
+          await DataHandler.setDefaults();
+
+          await Client.login().then((responseCode) async {
+            if (responseCode == 200) {
+              await Future.delayed(new Duration(seconds: 1), () {
+                setState(() {
+                  _processing = false;
+                });
+              });
+              await DataHandler.setHasBeenSetup(true);
+              await Client.requestVMS();
+              await Client.requestNodes();
+              Navigator.pushReplacement(
+                  context,
+                  MaterialPageRoute(builder: (context) => MainScreen()));
+            } else if (responseCode == 401) {
               await Future.delayed(new Duration(seconds: 1), () {
                 setState(() {
                   _processing = false;
@@ -196,7 +208,7 @@ class _ServerAuthLoginScreenState extends State<ServerAuthLoginScreen> {
               });
               _showDialog("Authenticaion Error", "The username and password you provided were invalid. Please try again.");
               _formKey.currentState.reset();
-            } else if (response.contains("UNKNOWN_ERROR")) {
+            } else if (responseCode == -1) {
               await Future.delayed(new Duration(seconds: 5), () {
                 setState(() {
                   _processing = false;
@@ -204,30 +216,12 @@ class _ServerAuthLoginScreenState extends State<ServerAuthLoginScreen> {
               });
               _showDialog("Unknown Error", "An unknown error has occured. Please try again later. If this problem persists please contact your System Administrator");
               _formKey.currentState.reset();
-            } else if (response.contains("AUTH_SUCCESS")) {
-              await Future.delayed(new Duration(seconds: 1), () {
-                setState(() {
-                  _processing = false;
-                });
-              });
-              SharedPreferences preferences = await SharedPreferences.getInstance();
-              await preferences.setBool('seen', true);
-
-              List<Node> nodes = new List<Node>();
-              List<VM> vms = new List<VM>();
-
-              await client.getNodes().then((response) {
-                nodes = response;
-              });
-
-              await client.getAllVMs().then((response) {
-                vms = response;
-              });
-
-              Navigator.pushReplacement(
-                  context,
-                  MaterialPageRoute(builder: (context) => MainScreen(client: client, nodes: nodes, vms: vms)));
             }
+          }).catchError((e) {
+            print(e.toString());
+          }).timeout(new Duration(seconds: 10), onTimeout: () {
+            _showDialog("Connection Timed Out", "Your connection has timed out after 10 seconds of no activity. Please check your connection settings and try again.");
+            _formKey.currentState.reset();
           });
         }
       },
@@ -288,6 +282,7 @@ class _ServerAuthLoginScreenState extends State<ServerAuthLoginScreen> {
       );
     }
 
+    /*
     _buildHorizontalLayout() {
       return GridView.count(
         shrinkWrap: true,
@@ -336,6 +331,7 @@ class _ServerAuthLoginScreenState extends State<ServerAuthLoginScreen> {
         ],
       );
     }
+    */
     
     return Scaffold(
         appBar: AppBar(
