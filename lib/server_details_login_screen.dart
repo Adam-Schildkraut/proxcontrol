@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:Proxcontrol/server_auth_login_screen.dart';
+import 'package:Proxcontrol/Client/client.dart';
 import 'package:modal_progress_hud/modal_progress_hud.dart';
-import 'package:Proxcontrol/client/data_handler.dart';
-import 'package:Proxcontrol/client/client.dart';
 
 class ServerDetailsLoginScreen extends StatefulWidget {
   @override
@@ -176,17 +175,16 @@ class _ServerDetailsLoginScreenState extends State<ServerDetailsLoginScreen> {
         child: RaisedButton(
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(24)),
-      onPressed: () async {
+        onPressed: () {
         if(_formKey.currentState.validate()) {
           _formKey.currentState.save();
 
           setState(() {
             _connecting = true;
           });
-          await DataHandler.init();
-          await DataHandler.setBaseUrl(serverAddress, serverPort);
-          await Client.requestAuthRealms().then((responseStatus) async {
-            if (responseStatus) {
+
+          API.getAuthRealms(serverAddress, serverPort).then((realms) async {
+            if (realms != null) {
               await Future.delayed(new Duration(seconds: 2), () {
                 setState(() {
                   _connecting = false;
@@ -195,18 +193,16 @@ class _ServerDetailsLoginScreenState extends State<ServerDetailsLoginScreen> {
               Navigator.pushReplacement(
                   context,
                   MaterialPageRoute(builder: (context) =>
-                      ServerAuthLoginScreen()));
-            } else {
-              setState(() {
-                _connecting = false;
-              });
-              _showDialog("Connection Error", "An error has occurred while connecting to your server. Please verify your connection details and try again.");
-              _formKey.currentState.reset();
+                      ServerAuthLoginScreen(authRealms: realms,
+                          url: serverAddress,
+                          port: serverPort)));
             }
           }).catchError((e) {
             print(e.toString());
-          }).timeout(new Duration(seconds: 10), onTimeout: () {
-            _showDialog("Connection Timed Out", "Your connection has timed out after 10 seconds of no activity. Please check your connection settings and try again.");
+            setState(() {
+              _connecting = false;
+            });
+            _showDialog("Connection Error", "An error has occurred while connecting to your server. Please verify your connection details and try again.");
             _formKey.currentState.reset();
           });
         }
@@ -263,7 +259,6 @@ class _ServerDetailsLoginScreenState extends State<ServerDetailsLoginScreen> {
       );
     }
 
-    /*
     _buildHorizontalLayout() {
       return GridView.count(
         //shrinkWrap: true,
@@ -312,7 +307,6 @@ class _ServerDetailsLoginScreenState extends State<ServerDetailsLoginScreen> {
         ],
       );
     }
-    */
 
     return Scaffold(
       body: ModalProgressHUD(
