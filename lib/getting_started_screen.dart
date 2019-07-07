@@ -83,7 +83,9 @@ class _WelcomeState extends State<GettingStartedScreen> {
           onPressed: () {
             Navigator.pushReplacement(
               context,
-              MaterialPageRoute(builder: (context) => ServerDetailsLoginScreen()));
+              MaterialPageRoute(builder: (context) => ServerDetailsLoginScreen()
+              )
+            );
           },
         );
       }
@@ -101,8 +103,6 @@ class Walkthrougth extends StatelessWidget {
     return Container(
       height: MediaQuery.of(context).size.height,
       width: MediaQuery.of(context).size.width,
-      //background colour:
-      //decoration: BoxDecoration(color: Color.fromARGB(64, 252, 233, 205)),
       child: Stack(
         children: <Widget>[
           Container(
@@ -116,7 +116,7 @@ class Walkthrougth extends StatelessWidget {
             ),
           ),
           Container(
-            alignment: FractionalOffset(0.5, 0.61 ),
+            alignment: FractionalOffset(0.5, 0.6),
             child: FittedBox(
               child: getIconFromPage(currentPage, context)
             )
@@ -128,7 +128,7 @@ class Walkthrougth extends StatelessWidget {
               children: <Widget>[
                 Container(
                   padding: EdgeInsets.only(
-                    top: MediaQuery.of(context).size.height / 20,
+                    top: MediaQuery.of(context).size.height / 50,
                     bottom: MediaQuery.of(context).size.height / 20,
                     left: MediaQuery.of(context).size.width / 24,
                     right: MediaQuery.of(context).size.width / 24
@@ -146,7 +146,7 @@ class Walkthrougth extends StatelessWidget {
                 //Description Container
                 Container(
                   padding: EdgeInsets.only(
-                    top: MediaQuery.of(context).size.height / 4,
+                    top: MediaQuery.of(context).size.height / 3.5,
                     bottom: MediaQuery.of(context).size.height / 20,
                     left: MediaQuery.of(context).size.width / 16,
                     right: MediaQuery.of(context).size.width / 16
@@ -157,7 +157,7 @@ class Walkthrougth extends StatelessWidget {
                     textAlign: TextAlign.center,
                     style: TextStyle(
                       color: Colors.pink[200], 
-                      fontSize: 20.0
+                      fontSize: 18.0
                     ),
                   ),
                 ),

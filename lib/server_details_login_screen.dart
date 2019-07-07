@@ -84,90 +84,104 @@ class _ServerDetailsLoginScreenState extends State<ServerDetailsLoginScreen> {
                 style: TextStyle(
                   color: Colors.white,
                   fontSize: 17,
-                )
-              )
+                ),
+              ),
             ),
-          ]
+          ],
         ),
       )
     );
 
-    final serverAddressField = Container(
-      height: 45,
-      padding: EdgeInsets.only(
-          top: 2,left: 16, right: 16, bottom: 4
-      ),
-      decoration: BoxDecoration(
-          borderRadius: BorderRadius.all(
+    final serverAddressField = Stack(
+      children: <Widget>[
+        Container(
+          height: 45,
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.all(
               Radius.circular(50)
+            ),
+            color: Colors.white,
+            boxShadow: [
+              BoxShadow(
+                  color: Colors.black12,
+                  blurRadius: 5
+              )
+            ],
           ),
-          color: Colors.white,
-          boxShadow: [
-            BoxShadow(
-                color: Colors.black12,
-                blurRadius: 5
-            )
-          ]
-      ),
-      child: TextFormField(
-        validator: (value) {
-          if (value.isEmpty) {
-            return 'You must specify a FQDN or IP.';
-          } else if (value.contains('http://')) {
-            return 'This should not contan http://';
-          } else if (value.contains('https://')) {
-            return 'This should not contain https://';
-          }
-        },
-        onSaved: (value) {
-          value = value.replaceAll(new RegExp(r"http://"), '');
-          value = value.replaceAll(new RegExp(r"https://"), '');
-          serverAddress = value;
-        },
-        decoration: InputDecoration(
-          border: InputBorder.none,
-          icon: Icon(Icons.dns,
-            color: Colors.grey,
-          ),
-          hintText: 'FQDN or IP Address',
         ),
-      ),
+        Padding(
+          padding: EdgeInsets.only(top: 0, left: 15, right: 15),
+          child: TextFormField(
+            validator: (value) {
+              if (value.isEmpty) {
+                return 'You must specify a FQDN or IP.';
+              } else if (value.contains('http://')) {
+                return 'This should not contan http://';
+              } else if (value.contains('https://')) {
+                return 'This should not contain https://';
+              }
+            },
+            onSaved: (value) {
+              value = value.replaceAll(new RegExp(r"http://"), '');
+              value = value.replaceAll(new RegExp(r"https://"), '');
+              serverAddress = value;
+            },
+            decoration: InputDecoration(
+              border: InputBorder.none,
+              icon: Icon(
+                Icons.dns,
+                color: Colors.grey,
+              ),
+              hintText: 'FQDN or IP Address',
+              helperText: '',
+            ),
+          ),
+        ),
+      ],
     );
 
-    final serverPortField = Container(
-      height: 45,
-      padding: EdgeInsets.only(
-          top: 2,left: 16, right: 16, bottom: 4
-      ),
-      decoration: BoxDecoration(
-          borderRadius: BorderRadius.all(
-              Radius.circular(50)
+    final serverPortField = Stack(
+      children: <Widget>[
+        Container(
+          height: 45,
+          padding: EdgeInsets.only(
+            top: 20,left: 16, right: 16, bottom: 4
           ),
-          color: Colors.white,
-          boxShadow: [
-            BoxShadow(
-                color: Colors.black12,
-                blurRadius: 5
-            )
-          ]
-      ),
-      child: TextFormField(
-        validator: (value) {
-          if (value.isEmpty) {
-            return 'You must specify a port.';
-          }
-        },
-        onSaved: (value) {
-          serverPort = value;
-        },
-        decoration: InputDecoration(
-          border: InputBorder.none,
-          icon: Icon(Icons.vpn_key,
-            color: Colors.grey,
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.all(
+                Radius.circular(50)
+            ),
+            color: Colors.white,
+            boxShadow: [
+              BoxShadow(
+                  color: Colors.black12,
+                  blurRadius: 5
+              )
+            ]
           ),
-          hintText: 'API Port',
         ),
-      ),
+        Padding(
+          padding: EdgeInsets.only(top: 0, left: 15, right: 15),
+          child: TextFormField(
+            validator: (value) {
+              if (value.isEmpty) {
+                return 'You must specify a port.';
+              }
+            },
+            onSaved: (value) {
+              serverPort = value;
+            },
+            decoration: InputDecoration(
+              border: InputBorder.none,
+              icon: Icon(Icons.vpn_key,
+                color: Colors.grey,
+              ),
+              hintText: 'API Port',
+              helperText: '',
+            ),
+          ),
+        ),
+      ],
     );
 
     final nextButton = Center(
@@ -193,9 +207,9 @@ class _ServerDetailsLoginScreenState extends State<ServerDetailsLoginScreen> {
                     });
                   });
                   Navigator.pushReplacement(
-                      context,
-                      MaterialPageRoute(builder: (context) =>
-                          ServerAuthLoginScreen()));
+                    context,
+                    MaterialPageRoute(builder: (context) => ServerAuthLoginScreen())
+                  );
                 } else {
                   setState(() {
                     _connecting = false;
@@ -212,11 +226,11 @@ class _ServerDetailsLoginScreenState extends State<ServerDetailsLoginScreen> {
             }
           },
           gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
+            begin: Alignment.centerLeft,
+            end: Alignment.centerRight,
             colors: [
-              Color(0xFFff9321),
-              Color(0xFFffb946)
+              Color(0xFFf5851f),
+              Color(0xFFf45d27),
             ],
           ),
           increaseWidthBy: 180,
@@ -232,22 +246,21 @@ class _ServerDetailsLoginScreenState extends State<ServerDetailsLoginScreen> {
         key: _formKey,
         child: ListView(
           padding: EdgeInsets.all(0),
+          physics: NeverScrollableScrollPhysics(),
           children: <Widget>[
             image,
-            
             Align(
               alignment: FractionalOffset(0.5, 0.49),
               child: Padding(
                 padding: EdgeInsets.only(
-                    top: screenHeight / 16,
-                    bottom: screenHeight / 24,
+                    top: screenHeight / 12,
+                    bottom: screenHeight / 48,
                     left: screenWidth / 12,
                     right: screenWidth / 12,
                   ),
                 child: serverAddressField
               ),
             ),
-                
             Align(
               alignment: FractionalOffset(0.5, 0.6),
               child: Padding(
@@ -255,7 +268,7 @@ class _ServerDetailsLoginScreenState extends State<ServerDetailsLoginScreen> {
                   bottom: screenHeight / 12,
                   left: screenWidth / 12,
                   right: screenWidth / 12,
-                  top: screenHeight / 24,
+                  top: screenHeight / 48,
                 ),
                 child: serverPortField,
               ),
@@ -285,7 +298,7 @@ class _ServerDetailsLoginScreenState extends State<ServerDetailsLoginScreen> {
             Padding(
               padding: EdgeInsets.only(
                   right: screenWidth / 18,
-                  top: screenHeight / 2,
+                  top: screenHeight / 1.5,
                   bottom: screenHeight / 10
               ),
               child: serverAddressField,
@@ -295,7 +308,7 @@ class _ServerDetailsLoginScreenState extends State<ServerDetailsLoginScreen> {
               padding: EdgeInsets.only(
                   left: screenWidth / 10,
                   right: screenWidth / 10,
-                  top: screenHeight / 1.7
+                  top: screenHeight / 4
                   ),
               child: nextButton,
             ),

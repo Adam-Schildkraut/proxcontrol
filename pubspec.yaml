@@ -38,6 +38,6 @@ flutter:
         - asset: assets/Nunito.ttf
 
 flutter_icons:
-  image_path: "assets/icon.png"
+  image_path: "assets/Prox Logo.png"
   ios: true
   android: true
